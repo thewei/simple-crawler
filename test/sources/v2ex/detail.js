@@ -2,7 +2,7 @@
 
 const configs = {
   domains: ['v2ex.com'],
-  scanUrls: ['https://v2ex.com/t/278383'],
+  scanUrls: ['https://v2ex.com/t/324964'],
   fields: [
     {
       name: 'title',

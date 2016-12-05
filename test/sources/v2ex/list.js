@@ -2,7 +2,7 @@
 
 const configs = {
   domains: ['v2ex.com'],
-  scanUrls: ['https://www.v2ex.com/recent'],
+  scanUrls: ['https://www.v2ex.com'],
   fields: [
     {
       // 抽取列表子顶
