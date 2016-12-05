@@ -1,11 +1,10 @@
-import test from 'ava';
-import Crawler from '../dist/index'
-import v2exDetail from './sources/v2ex/detail'
+const test = require('ava');
+const Crawler = require('../src/index').default
+const v2exDetail = require('./sources/v2ex/detail').default
 
-test('get detail', t => {
+test('get detail', async t => {
   const crawler = new Crawler(v2exDetail)
-  crawler.start().then(function (res) {
-    console.log('detail', res)
-  })
+  const res = await crawler.start()
+  console.log('detail', res)
   t.pass();
 });
