@@ -8,8 +8,8 @@ test.before(async t => {
   context = await crawler.start()
 });
 
-test('返回文章列表长度为50条', t => {
-  t.is(context.length, 50);
+test('返回文章列表长度大于0', t => {
+  t.is(context.length > 0, true);
 });
 
 // test('DOM.text()', t => {

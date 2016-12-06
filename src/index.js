@@ -2,46 +2,54 @@ import "isomorphic-fetch"
 import cheerio from 'cheerio-without-node-native'
 
 export default class Crawler {
-  constructor (props) {
-    this.options = props.options || {}
-    this.domains = props.domains
-    this.scanUrls = props.scanUrls
-    this.fields = props.fields
-    // 爬虫初始化时调用, 用来指定一些爬取前的操作
-    this.beforeCrawler = props.beforeCrawler
-    // 在一个网页下载完成之后调用. 主要用来对下载的网页进行处理.
-    this.afterDownloadPage = props.afterDownloadPage
-    // 当一个field的内容被抽取到后进行的回调, 在此回调中可以对网页中抽取的内容作进一步处理
-    this.afterExtractField = props.afterExtractField
-    // field抽取完成之后, 可能需要对field进一步处理
-    this.afterExtractPage = props.afterExtractPage
+  constructor(props) {
+    this.configs = props
   }
-  async start (options = {}) {
-    options = {
-      ...this.options,
-      options
-    }
-    // 预处理
-    if (this.beforeCrawler) {
-      options = await this.beforeCrawler(options)
+  async start () {
+    /**
+     * 爬虫初始化时调用, 用来指定一些爬取前的操作
+     * 比如覆盖默认设置
+     */
+    if (this.configs.beforeCrawler) {
+      try {
+        const opts = await this.configs.beforeCrawler(this.configs)
+        this.configs = Object.assign(this.configs, opts)
+      } catch (e) {
+        console.error(e)
+      }
     }
 
     return new Promise((resolve, reject) => {
-      this.scanUrls.map(async scanUrl => {
+      // 遍历入口 url 开始爬取
+      this.configs.scanUrls.map(async url => {
         try {
-          let fetchOptions = options.fetchOptions || {}
-          const response = await fetch(scanUrl, fetchOptions)
+          let fetchOptions = this.configs.fetchOptions || {}
+          const response = await fetch(url, fetchOptions)
           const responseData = await response.text()
-          const $ = cheerio.load(responseData)
-          let page = $
-          if (this.afterDownloadPage) {
-            page = await this.afterDownloadPage($, responseData, response)
+          let $ = cheerio.load(responseData)
+          /**
+           * 在一个网页下载完成之后调用
+           * 主要用来对下载的网页进行处理
+           */
+          if (this.configs.afterDownloadPage) {
+            try {
+              $ = await this.configs.afterDownloadPage($, response)
+            } catch (e) {
+              console.error(e)
+            }
           }
           // 处理抓取的字段
-          const res = await this.getFields(this.fields, page)
-          let data = res
-          if (this.afterExtractPage) {
-            data = await this.afterExtractPage(data)
+          let data = await this.getFields(this.configs.fields, $)
+          /**
+           * field抽取完成之后
+           * 可能需要对field进一步处理
+           */
+          if (this.configs.afterExtractPage) {
+            try {
+              data = await this.configs.afterExtractPage(data)
+            } catch (e) {
+              console.error(e)
+            }
           }
           // 返回结果
           resolve(data)
@@ -77,8 +85,20 @@ export default class Crawler {
               data[field.name] = selector.text()
               break
           }
+          /**
+           * 当一个field的内容被抽取到后进行的回调
+           * 在此回调中可以对网页中抽取的内容作进一步处理
+           */
           if (this.afterExtractField) {
-            data[field.name] = await this.afterExtractField(field.name, data[field.name], data)
+            try {
+              data[field.name] = await this.configs.afterExtractField(
+                field.name,
+                data[field.name],
+                data
+              )
+            } catch (e) {
+              console.error(e)
+            }
           }
         }
       })
