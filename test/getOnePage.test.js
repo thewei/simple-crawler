@@ -1,6 +1,6 @@
 const test = require('ava');
 const Crawler = require('../src/index').default
-const v2exList = require('./sources/v2ex/list').default
+const v2exList = require('./sources/cnodejs.org/list').default
 
 let context = {}
 test.before(async t => {

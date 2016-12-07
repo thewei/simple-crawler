@@ -1,5 +1,6 @@
 import "isomorphic-fetch"
 import cheerio from 'cheerio-without-node-native'
+import getUa from './utils/ua'
 
 export default class Crawler {
   constructor(props) {
@@ -10,6 +11,7 @@ export default class Crawler {
      * 爬虫初始化时调用, 用来指定一些爬取前的操作
      * 比如覆盖默认设置
      */
+    this.configs.headers = getUa(this.configs.domains[0], this.configs.scanUrls[0])
     if (this.configs.beforeCrawler) {
       try {
         const opts = await this.configs.beforeCrawler(this.configs)
